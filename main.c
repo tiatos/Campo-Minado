@@ -4,6 +4,7 @@
 #include <stdbool.h> // Necessário para ter funções booleanas
 
 #define bomba '@' // Simbolo da bomba para simplificação de código
+#define bandeira '!' // Simbolo da bandeira
 const char abc[] = "abcdefghi"; // Lados da matriz visivel
 const char nums[] = "123456789";
 
@@ -15,23 +16,15 @@ void print_matrix(int rows, int columns, char matriz_visivel[][columns])
     {
         for (int j = 0; j<columns ; j++) // Colunas
         {
-            if (j == 0 && i != 0) {
-                printf("{%c}", abc[i-1]); // Primeira Coluna para mostrar letras
-            }
+            if (j == 0 && i != 0) printf("{%c}", abc[i-1]); // Primeira Coluna para mostrar letras
+
             else
             {
-                if (i==0 && j ==0)
-                {
-                    printf("[ ]");
-                }
-                else if (i == 0)
-                {
-                    printf("{%d}", j); // Primeira linha para mostrar números
-                }
-                else
-                {
-                    printf("[%c]",matriz_visivel[i][j]);
-                }
+                if (i==0 && j ==0) printf("[ ]");
+
+                else if (i == 0) printf("{%d}", j); // Primeira linha para mostrar números
+
+                else printf("[%c]",matriz_visivel[i][j]);
             }
 
         }
@@ -52,7 +45,6 @@ int procura_bombas(int rows, int columns, char matriz_bombas[][columns], int i, 
             if (ib == i && jb == j) continue; // Casa atual
 
             if (matriz_bombas[ib][jb] == bomba) count_bomba++; // Contador de bomba aumenta caso tenha uma bomba
-            // CONTAGEM DE BOMBAS ERRADA, NECESSITA DE PROCURA PELA CAUSA
         }
     }
     return count_bomba;
@@ -90,14 +82,9 @@ void inicializar_numeros(int rows, int columns, char matriz_bombas[][columns],ch
     {
         for (int j = 0; j <columns; j++)
         {
-            if (matriz_bombas[i][j] != bomba)
-            {
-                matriz_numeros[i][j] = procura_bombas(rows, columns, matriz_bombas, i, j) + '0'; // Cada quadrado da matriz olha em volta de sí mesmos (se não forem bombas) para contar o número de bombas
-            }
-            else
-            {
-                matriz_numeros[i][j] = ' ';
-            }
+            if (matriz_bombas[i][j] != bomba) matriz_numeros[i][j] = procura_bombas(rows, columns, matriz_bombas, i, j) + '0'; // Cada quadrado da matriz olha em volta de sí mesmos (se não forem bombas) para contar o número de bombas
+
+            else matriz_numeros[i][j] = ' ';
         }
     }
 }
@@ -143,27 +130,14 @@ void pergunta_dificuldade(int *x,int *y, int *bomb_count)
     }
 }
 
-bool contains(char list[], int size, int target) {
+bool contains(char lista[], int size, int target) {
 // Função de procura em listas
     for (int i = 0; i < size; i++) {
-        if (list[i] == target) {
+        if (lista[i] == target) {
             return true; // Elemento encontrado, função para e retorna True
         }
     }
     return false; // Elemento não encontrado
-}
-
-bool teste_bombas(int i, int j, int rows, int columns, char matriz_bombas[][columns])
-// Função para teste de bombas
-{
-    if (matriz_bombas[i][j] == bomba)
-    {
-        return true; // Tem bomba
-    }
-    else
-    {
-        return false; // Não tem
-    }
 }
 
 bool bombas_faltando(int rows, int columns, char matriz_jogador[][columns], int bomb_count)
@@ -174,26 +148,16 @@ bool bombas_faltando(int rows, int columns, char matriz_jogador[][columns], int 
     {
         for (int j = 0; j < columns; j++)
         {
-            if (matriz_jogador[i][j] == '_')
-            {
-                bomb_missing++; // Todos os '_' na matriz são contados
-            }
+            if (matriz_jogador[i][j] == '_') bomb_missing++; // Todos os '_' na matriz são contados
         }
     }
-    if (bomb_count == bomb_missing) // Se número contado é igual ao número de bombas, jogo é ganho
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return (bomb_count == bomb_missing); // Se número contado é igual ao número de bombas, jogo é ganho
 }
 
 void revelar(int rows, int columns, char matriz_jogador[][columns], char matriz_numeros[][columns], int i, int j)
 // Função para revelar automaticamente áreas sem minas (expansão)
 {
-    if (i < 1 || i >= rows || j < 1 || j >= columns) return; // Procura se está fora do limite
+    if (i < 0 || i >= rows || j < 0 || j >= columns) return; // Procura se está fora do limite
     if (matriz_jogador[i][j] != '_') return; // Procura se quadrado já foi revelado
     matriz_jogador[i][j] = matriz_numeros[i][j]; // Revela o quadrado
     if (matriz_numeros[i][j] != '0') return; // Se não for 0, função para
@@ -212,7 +176,7 @@ void primeira_jogada(int rows, int columns, char matriz_jogador[][columns], char
     while (true)
     {
         print_matrix(rows,columns, matriz_jogador); // Imprime Matriz
-        printf("Insira uma posição para iniciar!\n");
+        printf("Insira uma posição para iniciar (Ex: a1)!\n");
         scanf(" %c%c", &posicao[0],&posicao[1]); // Escaneia posição da resposta
         if (contains(abc,rows-1,posicao[0]) && contains(nums,rows-1,posicao[1])) // Procura se ela é uma coordenada possível
         {
@@ -235,37 +199,67 @@ void primeira_jogada(int rows, int columns, char matriz_jogador[][columns], char
 void loop_jogo(int rows, int columns, char matriz_jogador[][columns],char matriz_bombas[][columns],char matriz_numeros[][columns], int bomb_count, int *wins, int *loss) // Função para loop de jogabilidade
 {
     char posicao[2];
+    char decisao_bandeira;
+    bool saida_jogo = true;
     primeira_jogada(rows, columns, matriz_jogador, matriz_bombas, matriz_numeros, posicao, bomb_count); // Bombas colocadas após primeira jogada
-    while (true) {
+    while (saida_jogo) {
         print_matrix(rows,columns, matriz_jogador); // Imprime Matriz
-        printf("Insira uma posição:\n");
-        scanf(" %c%c", &posicao[0],&posicao[1]); // Escaneia posição da resposta
-        if (contains(abc,rows-1,posicao[0]) && contains(nums,rows-1,posicao[1])) // Procura se ela é uma coordenada possível
+        printf("Limpar um quadrado(q) ou colocar uma bandeira(b)? (q/b)");
+        scanf(" %c", &decisao_bandeira);
+        if (decisao_bandeira == 'q' || decisao_bandeira == 'b')
         {
-            int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
-            int j = (posicao[1] - '1') + 1;
+            switch (decisao_bandeira)
+            {
+                case 'q':
+                    printf("Insira uma posição para limpar o quadrado(Ex: a1):\n");
+                    scanf(" %c%c", &posicao[0],&posicao[1]); // Escaneia posição da resposta
+                    if (contains(abc,rows-1,posicao[0]) && contains(nums,rows-1,posicao[1])) // Procura se ela é uma coordenada possível
+                    {
+                        int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
+                        int j = (posicao[1] - '1') + 1;
 
-            printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
-            if (teste_bombas(i,j,rows,columns,matriz_bombas)) // Se tem bomba, perde o jogo
-            {
-                printf("VOCÊ PERDEU O JOGO\n");
-                *loss = *loss + 1;
-                break; // Sai do loop do jogo
-            }
-            else
-            {
-                revelar(rows, columns, matriz_jogador, matriz_numeros, i, j); // Se é número, substitui quadrado visível por um número
-                if (bombas_faltando(rows, columns, matriz_jogador, bomb_count))
-                {
-                    printf("VOCÊ GANHOU, PARABÉNS! VAMOS JOGAR MAIS UMA VEZ!");
-                    *wins = *wins + 1;
+                        printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
+                        if (matriz_bombas[i][j] == bomba) // Se tem bomba, perde o jogo
+                        {
+                            printf("VOCÊ PERDEU O JOGO\n");
+                            *loss = *loss + 1;
+                            saida_jogo = false;
+                            break; // Sai do loop do jogo
+                        }
+                        else
+                        {
+                            revelar(rows, columns, matriz_jogador, matriz_numeros, i, j); // Se é número, substitui quadrado visível por um número
+                            if (bombas_faltando(rows, columns, matriz_jogador, bomb_count))
+                            {
+                                printf("VOCÊ GANHOU, PARABÉNS! VAMOS JOGAR MAIS UMA VEZ!");
+                                *wins = *wins + 1;
+                                saida_jogo = false;
+                                break;
+                            }
+                        }
+                    }
+                    else printf("\nOpcao invalida! Tente novamente.\n");
+                break;
+
+                case 'b':
+                    printf("Insira uma posição para colocar a bandeira (Ex: a1):\n");
+                    printf("Se já há uma bandeira na posição escolhida, ela será retirada \n");
+                    scanf(" %c%c", &posicao[0],&posicao[1]); // Escaneia posição da resposta
+                    if (contains(abc,rows-1,posicao[0]) && contains(nums,rows-1,posicao[1])) // Procura se ela é uma coordenada possível
+                    {
+                        int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
+                        int j = (posicao[1] - '1') + 1;
+
+                        printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
+                        if (matriz_jogador[i][j] == bandeira) matriz_jogador[i][j] = '_';
+                        else matriz_jogador[i][j] = bandeira;
+                    }
+                    else printf("\nOpcao invalida! Tente novamente.\n");
                     break;
-                }
+
+                default:
+                    printf("\nOpcao invalida! Tente novamente.\n");
             }
-        }
-        else
-        {
-            printf("\nOpcao invalida! Tente novamente.\n");
         }
     }
 }
