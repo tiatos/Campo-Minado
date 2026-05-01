@@ -23,7 +23,7 @@ void print_matrix(int rows, int columns, char matriz_visivel[][columns])
             {
                 if (i==0 && j ==0) {printf("[ ]");}
 
-                else if (i == 0) {printf("{%d}", j);} // Primeira linha para mostrar números
+                else if (i == 0) {printf("{%i}", j);} // Primeira linha para mostrar números
 
                 else {printf("[%c]",matriz_visivel[i][j]);}
             }
@@ -110,7 +110,7 @@ void pergunta_dificuldade(int *x,int *y, int *bomb_count)
     {
         int decisao_dificuldade;
         printf("Deseja Jogar em qual dificuldade?\n1- Fácil (5x5)\n2- Normal (8x8)\n");
-        scanf("%d", &decisao_dificuldade);
+        scanf("%i", &decisao_dificuldade);
         switch (decisao_dificuldade)
         {
             case 1:
@@ -141,19 +141,19 @@ bool contains(char lista[], int size, int target) {
     return false; // Elemento não encontrado
 }
 
-bool bombas_faltando(int rows, int columns, char matriz_jogador[][columns], int bomb_count, char matriz_bombas[][columns])
+bool bombas_faltando(int rows, int columns, char matriz_jogador[][columns], char matriz_bombas[][columns])
 // Função para retornar se todas as bombas foram encontradas
 {
-    int bomb_missing = 0;
+    int quadrados_ocultos = 0;
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < columns; j++)
         {
-            if ((matriz_jogador[i][j] == vazio) || (matriz_jogador[i][j] == bandeira && matriz_bombas[i][j] == bomba)) {bomb_missing++;}
-            // Todos os '_' e os '!' em um lugar de bomba são contados
+            if (matriz_bombas[i][j] != bomba && matriz_jogador[i][j] == vazio) {quadrados_ocultos++;}
+            // Não conta os '_' e os '!', apenas os '_' sem bomba embaixo
         }
     }
-    return (bomb_count == bomb_missing); // Se número contado é igual ao número de bombas, jogo é ganho
+    return (quadrados_ocultos == 0); // Se o número de quadrados ocultos sem bomba for 0 (Todos encontrados), jogo é ganho
 }
 
 void revelar(int rows, int columns, char matriz_jogador[][columns], char matriz_numeros[][columns], int i, int j)
@@ -185,7 +185,7 @@ void primeira_jogada(int rows, int columns, char matriz_jogador[][columns], char
             int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
             int j = (posicao[1] - '1') + 1;
 
-            printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
+            printf("Posição escolhida: linha %c, coluna %i\n", abc[i-1], j);
             inicializar_bombas(rows,columns, matriz_bombas, i, j, bomb_count); // Preenche aleatóriamente a matriz com bombas, menos na opção do jogador e ao redor
             inicializar_numeros(rows,columns, matriz_bombas,matriz_numeros); // Preenche a matriz com números baseado nas bombas
             revelar(rows, columns, matriz_jogador, matriz_numeros, i, j);
@@ -220,7 +220,7 @@ void loop_jogo(int rows, int columns, char matriz_jogador[][columns],char matriz
                         int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
                         int j = (posicao[1] - '1') + 1;
 
-                        printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
+                        printf("Posição escolhida: linha %c, coluna %i\n", abc[i-1], j);
                         if (matriz_bombas[i][j] == bomba) // Se tem bomba, perde o jogo
                         {
                             printf("VOCÊ PERDEU O JOGO\n");
@@ -231,7 +231,7 @@ void loop_jogo(int rows, int columns, char matriz_jogador[][columns],char matriz
                         else
                         {
                             revelar(rows, columns, matriz_jogador, matriz_numeros, i, j); // Se é número, substitui quadrado visível por um número
-                            if (bombas_faltando(rows, columns, matriz_jogador, bomb_count, matriz_bombas))
+                            if (bombas_faltando(rows, columns, matriz_jogador, matriz_bombas))
                             {
                                 printf("VOCÊ GANHOU, PARABÉNS! VAMOS JOGAR MAIS UMA VEZ!");
                                 *wins = *wins + 1;
@@ -252,10 +252,18 @@ void loop_jogo(int rows, int columns, char matriz_jogador[][columns],char matriz
                         int i = (posicao[0] - 'a') + 1; // Converte input para indice de matrix
                         int j = (posicao[1] - '1') + 1;
 
-                        printf("Posição escolhida: linha %c, coluna %d\n", abc[i-1], j);
+                        printf("Posição escolhida: linha %c, coluna %i\n", abc[i-1], j);
                         if (matriz_jogador[i][j] == bandeira) {matriz_jogador[i][j] = '_';} // Tinha bandeira
                         else if (matriz_jogador[i][j] == vazio) {matriz_jogador[i][j] = bandeira;} // Não tem bandeira
                         else {printf("Já foi revelado, não pode colocar bandeira");}
+
+                        if (bombas_faltando(rows, columns, matriz_jogador, matriz_bombas)) // Condição de vitória pelas bandeiras
+                        {
+                            printf("VOCÊ GANHOU, PARABÉNS! VAMOS JOGAR MAIS UMA VEZ!");
+                            *wins = *wins + 1;
+                            saida_jogo = false;
+                            break;
+                        }
                     }
                     else {printf("\nOpcao invalida! Tente novamente.\n");}
                     break;
@@ -277,14 +285,14 @@ int main() // Main Do jogo completo
         //Loop Menu
         printf("\n");
         printf("Vamos jogar Campo minado? [s/n]\n");
-        printf("\nTOTAL DE JOGOS: %d\n", wins+loss);
+        printf("\nTOTAL DE JOGOS: %i\n", wins+loss);
         scanf(" %c", &opcao);
         switch(opcao)
             {
             case 's':
             {
                 printf("\nVamos continuar então!");
-                printf("\nVitórias: %d X Derrotas: %d \n", wins, loss);
+                printf("\nVitórias: %i X Derrotas: %i \n", wins, loss);
                 int rows, columns, bomb_count;
                 pergunta_dificuldade(&rows, &columns, &bomb_count);
                 char matriz_bombas[rows][columns];
@@ -297,7 +305,7 @@ int main() // Main Do jogo completo
             case 'n':
                 printf("\nObrigado Por Jogar!\n");
                 printf("\nPONTUAÇÃO FINAL:");
-                printf("\nVitórias: %d X Derrotas: %d \n", wins, loss);
+                printf("\nVitórias: %i X Derrotas: %i \n", wins, loss);
                 cont = false;
                 break;
             default:
