@@ -131,7 +131,7 @@ void pergunta_dificuldade(int *x,int *y, int *bomb_count)
     }
 }
 
-bool contains(char lista[], int size, int target) {
+bool contains(const char lista[], int size, int target) {
 // Função de procura em listas
     for (int i = 0; i < size; i++) {
         if (lista[i] == target) {
